@@ -18,12 +18,12 @@ const Header = () => {
   }, []);
 
   const navItems = [
-    { name: 'Home', to: 'index.html' },
-    { name: 'About Us', to: 'AboutUs.html' },
-    { name: 'History', to: 'History.html' },
-    { name: 'Facility', to: 'Facility.html' },
-    { name: 'Location', to: 'Location.html' },
-    { name: 'Contact', to: 'Contact.html' },
+    { name: '홈', to: 'index.html' },
+    { name: '회사소개', to: 'AboutUs.html' },
+    { name: '연혁', to: 'History.html' },
+    { name: '시설안내', to: 'Facility.html' },
+    { name: '오시는 길', to: 'Location.html' },
+    { name: '문의하기', to: 'Contact.html' },
   ];
 
   const isHome = filename === 'index.html' || filename === '';
