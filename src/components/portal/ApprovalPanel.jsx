@@ -35,6 +35,7 @@ export default function ApprovalPanel() {
   const [showDraft, setShowDraft] = useState(false);
   const [toast, setToast] = useState('');
   const [customerInquiries, setCustomerInquiries] = useState([]);
+  const [replyTexts, setReplyTexts] = useState({});
 
   useEffect(() => {
     if (tab === '고객 문의') {
@@ -53,10 +54,15 @@ export default function ApprovalPanel() {
   };
 
   const handleCheckInquiry = (id) => {
-    const updated = customerInquiries.map(item => item.id === id ? { ...item, status: '완료' } : item);
+    const replyText = replyTexts[id] || '';
+    const updated = customerInquiries.map(item => item.id === id ? { ...item, status: '완료', reply: replyText } : item);
     setCustomerInquiries(updated);
     localStorage.setItem('customer_inquiries', JSON.stringify(updated));
-    showToast('✅ 확인 처리되었습니다.');
+    showToast('✅ 확인 처리 및 메모가 저장되었습니다.');
+  };
+
+  const handleReplyChange = (id, text) => {
+    setReplyTexts(prev => ({ ...prev, [id]: text }));
   };
 
   const items = tab === '고객 문의' ? customerInquiries : (APPROVALS[tab] || []);
@@ -165,11 +171,25 @@ export default function ApprovalPanel() {
               </div>
             </div>
             {tab === '고객 문의' && item.message && (
-              <div style={{ ...s.card, marginTop: '-12px', paddingTop: '0', borderTop: 'none', borderRadius: '0 0 12px 12px', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ ...s.card, marginTop: '-12px', paddingTop: '0', borderTop: 'none', borderRadius: '0 0 12px 12px', background: 'rgba(255,255,255,0.02)', display: 'block' }}>
                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', width: '100%', wordBreak: 'keep-all' }}>
                   <span style={{ color: '#38BDF8', fontWeight: 600, marginRight: '8px' }}>연락처: {item.phone} / {item.email}</span><br/><br/>
                   {item.message}
                 </div>
+                {item.status === '대기' && (
+                  <textarea
+                    style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginTop: '12px', height: '60px', resize: 'none', fontSize: '12px', background: 'rgba(0,0,0,0.15)' }}
+                    placeholder="담당자 메모 또는 처리 내용을 작성하세요..."
+                    value={replyTexts[item.id] || ''}
+                    onChange={(e) => handleReplyChange(item.id, e.target.value)}
+                  />
+                )}
+                {item.status === '완료' && item.reply && (
+                  <div style={{ fontSize: '12px', color: '#34D399', padding: '12px', background: 'rgba(16,185,129,0.1)', borderRadius: '8px', marginTop: '12px', border: '1px solid rgba(16,185,129,0.2)', wordBreak: 'keep-all' }}>
+                    <span style={{ fontWeight: 600, marginRight: '8px' }}>담당자 메모:</span><br/>
+                    {item.reply}
+                  </div>
+                )}
               </div>
             )}
             </React.Fragment>
