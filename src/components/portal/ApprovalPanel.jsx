@@ -42,7 +42,31 @@ export default function ApprovalPanel() {
   useEffect(() => {
     if (tab === '고객 문의') {
       try {
-        const stored = JSON.parse(localStorage.getItem('customer_inquiries') || '[]');
+        let stored = JSON.parse(localStorage.getItem('customer_inquiries') || '[]');
+        let needsUpdate = false;
+        stored = stored.map(item => {
+          let updatedItem = { ...item };
+          let itemChanged = false;
+          if (updatedItem.title && updatedItem.title.includes('땅개 - 김땅개')) {
+            updatedItem.title = updatedItem.title.replace('땅개 - 김땅개', '육군 - 김육군');
+            itemChanged = true;
+          }
+          if (updatedItem.requester === '김땅개') {
+            updatedItem.requester = '김육군';
+            itemChanged = true;
+          }
+          if (updatedItem.message && (updatedItem.message.includes('거 안되는디요 ㅇㅅㅇ') || updatedItem.message.includes('이거 안되는디요 ㅇㅅㅇ'))) {
+            updatedItem.message = updatedItem.message.replace('거 안되는디요 ㅇㅅㅇ', '이게 안됩니다').replace('이거 안되는디요 ㅇㅅㅇ', '이게 안됩니다');
+            itemChanged = true;
+          }
+          if (itemChanged) {
+            needsUpdate = true;
+          }
+          return updatedItem;
+        });
+        if (needsUpdate) {
+          localStorage.setItem('customer_inquiries', JSON.stringify(stored));
+        }
         setCustomerInquiries(stored);
       } catch (e) {
         console.error(e);
