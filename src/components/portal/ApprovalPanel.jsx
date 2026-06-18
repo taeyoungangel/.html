@@ -36,6 +36,8 @@ export default function ApprovalPanel() {
   const [toast, setToast] = useState('');
   const [customerInquiries, setCustomerInquiries] = useState([]);
   const [replyTexts, setReplyTexts] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
   useEffect(() => {
     if (tab === '고객 문의') {
@@ -63,6 +65,38 @@ export default function ApprovalPanel() {
 
   const handleReplyChange = (id, text) => {
     setReplyTexts(prev => ({ ...prev, [id]: text }));
+  };
+
+  const handleStartEdit = (id, currentReply) => {
+    setEditingId(id);
+    setEditText(currentReply || '');
+  };
+
+  const handleSaveEdit = (id) => {
+    const updated = customerInquiries.map(item => item.id === id ? { ...item, reply: editText } : item);
+    setCustomerInquiries(updated);
+    localStorage.setItem('customer_inquiries', JSON.stringify(updated));
+    setEditingId(null);
+    setEditText('');
+    showToast('✅ 메모가 수정되었습니다.');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const handleResetToPending = (id) => {
+    const updated = customerInquiries.map(item => {
+      if (item.id === id) {
+        setReplyTexts(prev => ({ ...prev, [id]: item.reply || '' }));
+        return { ...item, status: '대기', reply: '' };
+      }
+      return item;
+    });
+    setCustomerInquiries(updated);
+    localStorage.setItem('customer_inquiries', JSON.stringify(updated));
+    showToast('🔄 대기 상태로 변경되었습니다.');
   };
 
   const items = tab === '고객 문의' ? customerInquiries : (APPROVALS[tab] || []);
@@ -168,6 +202,16 @@ export default function ApprovalPanel() {
                     <button style={s.approveBtn} onClick={() => handleCheckInquiry(item.id)}>확인하기</button>
                   </div>
                 )}
+                {tab === '고객 문의' && item.status === '완료' && (
+                  <div style={s.actionBtns}>
+                    {editingId !== item.id && (
+                      <>
+                        <button style={s.editBtn} onClick={() => handleStartEdit(item.id, item.reply)}>수정</button>
+                        <button style={s.pendingBtn} onClick={() => handleResetToPending(item.id)}>대기로 변경</button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             {tab === '고객 문의' && item.message && (
@@ -184,11 +228,28 @@ export default function ApprovalPanel() {
                     onChange={(e) => handleReplyChange(item.id, e.target.value)}
                   />
                 )}
-                {item.status === '완료' && item.reply && (
-                  <div style={{ fontSize: '12px', color: '#34D399', padding: '12px', background: 'rgba(16,185,129,0.1)', borderRadius: '8px', marginTop: '12px', border: '1px solid rgba(16,185,129,0.2)', wordBreak: 'keep-all' }}>
-                    <span style={{ fontWeight: 600, marginRight: '8px' }}>담당자 메모:</span><br/>
-                    {item.reply}
-                  </div>
+                {item.status === '완료' && (
+                  editingId === item.id ? (
+                    <div style={{ marginTop: '12px' }}>
+                      <textarea
+                        style={{ ...s.input, width: '100%', boxSizing: 'border-box', height: '60px', resize: 'none', fontSize: '12px', background: 'rgba(0,0,0,0.15)' }}
+                        placeholder="담당자 메모 또는 처리 내용을 작성하세요..."
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '8px' }}>
+                        <button style={s.cancelBtnSmall} onClick={handleCancelEdit}>취소</button>
+                        <button style={s.saveBtnSmall} onClick={() => handleSaveEdit(item.id)}>저장</button>
+                      </div>
+                    </div>
+                  ) : (
+                    item.reply && (
+                      <div style={{ fontSize: '12px', color: '#34D399', padding: '12px', background: 'rgba(16,185,129,0.1)', borderRadius: '8px', marginTop: '12px', border: '1px solid rgba(16,185,129,0.2)', wordBreak: 'keep-all' }}>
+                        <span style={{ fontWeight: 600, marginRight: '8px' }}>담당자 메모:</span><br/>
+                        {item.reply}
+                      </div>
+                    )
+                  )
                 )}
               </div>
             )}
@@ -238,4 +299,8 @@ const s = {
   actionBtns: { display: 'flex', gap: '6px' },
   approveBtn: { padding: '5px 12px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '6px', color: '#34D399', fontSize: '12px', cursor: 'pointer', fontWeight: 600 },
   rejectBtn: { padding: '5px 12px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#FCA5A5', fontSize: '12px', cursor: 'pointer', fontWeight: 600 },
+  editBtn: { padding: '5px 12px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', borderRadius: '6px', color: '#38BDF8', fontSize: '12px', cursor: 'pointer', fontWeight: 600 },
+  pendingBtn: { padding: '5px 12px', background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)', borderRadius: '6px', color: '#FCD34D', fontSize: '12px', cursor: 'pointer', fontWeight: 600 },
+  cancelBtnSmall: { padding: '4px 10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', color: 'rgba(255,255,255,0.6)', fontSize: '11px', cursor: 'pointer' },
+  saveBtnSmall: { padding: '4px 10px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '6px', color: '#34D399', fontSize: '11px', cursor: 'pointer', fontWeight: 600 },
 };
