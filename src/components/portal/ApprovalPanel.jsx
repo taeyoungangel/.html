@@ -123,6 +123,15 @@ export default function ApprovalPanel() {
     showToast('🔄 대기 상태로 변경되었습니다.');
   };
 
+  const handleDeleteInquiry = (id) => {
+    if (window.confirm('정말 이 고객 문의를 삭제하시겠습니까?')) {
+      const updated = customerInquiries.filter(item => item.id !== id);
+      setCustomerInquiries(updated);
+      localStorage.setItem('customer_inquiries', JSON.stringify(updated));
+      showToast('🗑️ 고객 문의가 삭제되었습니다.');
+    }
+  };
+
   const items = tab === '고객 문의' ? customerInquiries : (APPROVALS[tab] || []);
 
   return (
@@ -224,6 +233,7 @@ export default function ApprovalPanel() {
                 {tab === '고객 문의' && item.status === '대기' && (
                   <div style={s.actionBtns}>
                     <button style={s.approveBtn} onClick={() => handleCheckInquiry(item.id)}>확인하기</button>
+                    <button style={s.rejectBtn} onClick={() => handleDeleteInquiry(item.id)}>삭제</button>
                   </div>
                 )}
                 {tab === '고객 문의' && item.status === '완료' && (
@@ -232,6 +242,7 @@ export default function ApprovalPanel() {
                       <>
                         <button style={s.editBtn} onClick={() => handleStartEdit(item.id, item.reply)}>수정</button>
                         <button style={s.pendingBtn} onClick={() => handleResetToPending(item.id)}>대기로 변경</button>
+                        <button style={s.rejectBtn} onClick={() => handleDeleteInquiry(item.id)}>삭제</button>
                       </>
                     )}
                   </div>
